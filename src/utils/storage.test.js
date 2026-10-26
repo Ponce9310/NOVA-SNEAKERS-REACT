@@ -1,0 +1,20 @@
+import { beforeEach, describe, expect, it } from "vitest";
+import { agregarAlCarrito, calcularSubtotal, calcularTotal, cambiarCantidad, filtrarProductos, formatearPrecio, guardarStorage, leerStorage, validarCorreo, validarRegistro } from "./storage.js";
+const zapato={codigo:"NS-001",nombre:"Nova Air",descripcion:"Zapatilla urbana",precio:50000,stock:3,categoria:"Urbanas",publico:"Unisex"};
+beforeEach(()=>localStorage.clear());
+describe("Funciones de tienda",()=>{
+ it("1. calcula el subtotal",()=>expect(calcularSubtotal(10000,3)).toBe(30000));
+ it("2. calcula el total del carrito",()=>expect(calcularTotal([{precio:1000,cantidad:2},{precio:500,cantidad:3}])).toBe(3500));
+ it("3. devuelve cero para un carrito vacío",()=>expect(calcularTotal([])).toBe(0));
+ it("4. valida un correo correcto",()=>expect(validarCorreo("alumno@ejemplo.cl")).toBe(true));
+ it("5. rechaza un correo sin arroba",()=>expect(validarCorreo("alumnoejemplo.cl")).toBe(false));
+ it("6. detecta campos de registro vacíos",()=>expect(validarRegistro({nombre:"",correo:"",password:""})).toHaveProperty("nombre"));
+ it("rechaza correos fuera de los dominios permitidos al registrar",()=>expect(validarRegistro({nombre:"Estudiante",correo:"persona@ejemplo.com",password:"1234"}).correo).toMatch(/correo @duoc.cl/));
+ it("acepta una contraseña dentro del rango de la EA1",()=>expect(validarRegistro({nombre:"Estudiante",correo:"persona@gmail.com",password:"1234"})).not.toHaveProperty("password"));
+ it("7. agrega un producto nuevo al carrito",()=>expect(agregarAlCarrito([],zapato)).toHaveLength(1));
+ it("8. aumenta la cantidad de un producto repetido",()=>expect(agregarAlCarrito([{...zapato,cantidad:1}],zapato)[0].cantidad).toBe(2));
+ it("9. elimina un producto al poner cantidad cero",()=>expect(cambiarCantidad([{...zapato,cantidad:1}],"NS-001",0)).toHaveLength(0));
+ it("10. filtra por categoría",()=>expect(filtrarProductos([zapato],"","Urbanas","Todos")).toHaveLength(1));
+ it("11. guarda y recupera información local",()=>{guardarStorage("prueba",[zapato]);expect(leerStorage("prueba",[])[0].codigo).toBe("NS-001");});
+ it("12. formatea un precio chileno",()=>expect(formatearPrecio(1000)).toContain("1.000"));
+});
